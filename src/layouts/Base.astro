@@ -1,0 +1,33 @@
+---
+import { localizePath, type Locale } from '../i18n/locales';
+import { t } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+  title: string;
+  description: string;
+}
+
+const { locale, title, description } = Astro.props;
+const tr = t(locale);
+const other: Locale = locale === 'en' ? 'pt' : 'en';
+const switchHref = localizePath(Astro.url.pathname, other);
+---
+
+<!doctype html>
+<html lang={locale === 'pt' ? 'pt-BR' : 'en'}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+  </head>
+  <body>
+    <header>
+      <a href={switchHref} hreflang={other === 'pt' ? 'pt-BR' : 'en'} lang={other === 'pt' ? 'pt-BR' : 'en'} aria-label={tr('lang.switchLabel')} data-lang-switch>
+        {tr('lang.switch')}
+      </a>
+    </header>
+    <slot />
+  </body>
+</html>

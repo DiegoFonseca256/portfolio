@@ -1,0 +1,29 @@
+---
+import Base from '../../layouts/Base.astro';
+import { everyLocale, type Locale } from '../../i18n/locales';
+import { t } from '../../i18n/ui';
+import { profile } from '../../data/profile';
+
+export function getStaticPaths() {
+  return everyLocale();
+}
+
+const { locale } = Astro.props as { locale: Locale };
+const tr = t(locale);
+---
+
+<Base locale={locale} title={tr('meta.title')} description={tr('meta.description')}>
+  <main>
+    <h1>{tr('home.headline')}</h1>
+    <p>{tr('home.context')}</p>
+
+    <section aria-labelledby="contact-heading">
+      <h2 id="contact-heading">{tr('contact.heading')}</h2>
+      <ul>
+        <li><a href={`mailto:${profile.email}`}>{tr('contact.email')}</a></li>
+        <li><a href={profile.linkedin}>{tr('contact.linkedin')}</a></li>
+        <li><a href={profile.github}>{tr('contact.github')}</a></li>
+      </ul>
+    </section>
+  </main>
+</Base>
