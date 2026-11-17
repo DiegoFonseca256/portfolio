@@ -6,12 +6,12 @@ Rule: an alert fires only when the price **enters** a zone outside the band; sta
 
 **Blocked by:** 01: Walking skeleton
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Vitest is set up and runs from one command.
-- [ ] The six-reading decision table from the StockQuoteAlert README passes as the primary fixture (inside/no, above/sell, above/no, inside/clears, above/sell, below/buy).
-- [ ] A price exactly equal to a reference price counts as inside the band.
-- [ ] An empty series returns an empty result.
-- [ ] A series that starts outside the band fires on its first reading.
-- [ ] Repeated direct crossings (above → below → above) fire sell, buy, sell.
-- [ ] The module has no dependency on any UI framework or the DOM.
+- [x] Vitest is set up and runs from one command.
+- [x] The six-reading decision table from the StockQuoteAlert README passes as the primary fixture (inside/no, above/sell, above/no, inside/clears, above/sell, below/buy).
+- [x] A price exactly equal to a reference price counts as inside the band.
+- [x] An empty series returns an empty result.
+- [x] A series that starts outside the band fires on its first reading.
+- [x] Repeated direct crossings (above → below → above) fire sell, buy, sell.
+- [x] The module has no dependency on any UI framework or the DOM.

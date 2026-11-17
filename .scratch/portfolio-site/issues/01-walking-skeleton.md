@@ -4,14 +4,14 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Git is initialized in the project folder with a sensible `.gitignore`.
-- [ ] The Astro + TypeScript project builds to fully static output with no server runtime.
-- [ ] English is served at the root and Portuguese at `/pt/` through Astro's built-in i18n routing.
-- [ ] The language switch on any page navigates to the same page in the other language.
-- [ ] A missing translation key or page fails the build instead of falling back silently.
-- [ ] Playwright runs against the production build served locally.
-- [ ] An e2e test checks that every EN route has a PT mirror and vice versa.
-- [ ] An e2e test checks that Diego's phone number appears nowhere in the built output.
-- [ ] The README explains how to install, run, build and test.
+- [x] Git is initialized in the project folder with a sensible `.gitignore`.
+- [x] The Astro + TypeScript project builds to fully static output with no server runtime.
+- [x] English is served at the root and Portuguese at `/pt/` through Astro's built-in i18n routing.
+- [x] The language switch on any page navigates to the same page in the other language.
+- [x] A missing translation key or page fails the build instead of falling back silently.
+- [x] Playwright runs against the production build served locally.
+- [x] An e2e test checks that every EN route has a PT mirror and vice versa.
+- [x] An e2e test checks that Diego's phone number appears nowhere in the built output.
+- [x] The README explains how to install, run, build and test.
