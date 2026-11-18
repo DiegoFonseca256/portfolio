@@ -17,6 +17,10 @@ const en = {
   'contact.github': 'GitHub',
   'lang.switch': 'Português',
   'lang.switchLabel': 'Ler em português',
+  'theme.dark': 'Dark theme',
+  'identity.role': 'Computer Engineering student · PUC-Rio · Rio de Janeiro',
+  'nav.skip': 'Skip to content',
+  'nav.label': 'Site',
 } as const;
 
 type Keys = keyof typeof en;
@@ -34,6 +38,10 @@ const pt: Record<Keys, string> = {
   'contact.github': 'GitHub',
   'lang.switch': 'English',
   'lang.switchLabel': 'Read in English',
+  'theme.dark': 'Tema escuro',
+  'identity.role': 'Estudante de Engenharia da Computação · PUC-Rio · Rio de Janeiro',
+  'nav.skip': 'Pular para o conteúdo',
+  'nav.label': 'Site',
 };
 
 const dictionaries: Record<Locale, Record<Keys, string>> = { en, pt };

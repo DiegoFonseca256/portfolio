@@ -10,20 +10,43 @@ export function getStaticPaths() {
 
 const { locale } = Astro.props as { locale: Locale };
 const tr = t(locale);
+// The full home (Estudo de caso previews, Brasileirão, Experiência, skills) is ticket 08.
 ---
 
 <Base locale={locale} title={tr('meta.title')} description={tr('meta.description')}>
-  <main>
-    <h1>{tr('home.headline')}</h1>
-    <p>{tr('home.context')}</p>
+  <h1>{tr('home.headline')}</h1>
+  <p class="context">{tr('home.context')}</p>
 
-    <section aria-labelledby="contact-heading">
-      <h2 id="contact-heading">{tr('contact.heading')}</h2>
-      <ul>
-        <li><a href={`mailto:${profile.email}`}>{tr('contact.email')}</a></li>
-        <li><a href={profile.linkedin}>{tr('contact.linkedin')}</a></li>
-        <li><a href={profile.github}>{tr('contact.github')}</a></li>
-      </ul>
-    </section>
-  </main>
+  <section aria-labelledby="contact-heading">
+    <h2 id="contact-heading">{tr('contact.heading')}</h2>
+    <ul>
+      <li><a href={`mailto:${profile.email}`}>{tr('contact.email')}</a></li>
+      <li><a href={profile.linkedin}>{tr('contact.linkedin')}</a></li>
+      <li><a href={profile.github}>{tr('contact.github')}</a></li>
+    </ul>
+  </section>
 </Base>
+
+<style>
+  h1 {
+    max-width: 22ch;
+    font: 400 var(--text-3xl) / 1.05 var(--font-display);
+  }
+  .context {
+    max-width: var(--measure);
+    margin: var(--space-s) 0 var(--space-2xl);
+    color: var(--color-accent);
+    font-size: var(--text-lg);
+  }
+  h2 {
+    margin-bottom: var(--space-s);
+    font: 400 var(--text-2xl) / 1 var(--font-display);
+  }
+  ul {
+    display: grid;
+    gap: var(--space-2xs);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+</style>
