@@ -17,6 +17,11 @@ export function everyLocale() {
   return locales.map((locale) => ({ params: { locale: localeParam(locale) }, props: { locale } }));
 }
 
+/** The BCP 47 tag for `lang` and `hreflang` attributes. */
+export function htmlLang(locale: Locale): string {
+  return locale === 'pt' ? 'pt-BR' : 'en';
+}
+
 /** Path of `pathname` in `target` locale, keeping the visitor on the equivalent page. */
 export function localizePath(pathname: string, target: Locale): string {
   const withoutPrefix = pathname.replace(/^\/pt(?=\/|$)/, '') || '/';

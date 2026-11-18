@@ -2,12 +2,12 @@
 // Render first thing in <head>. Runs blocking, before first paint, so a saved
 // theme never flashes the system one first. A failure to read storage leaves
 // the system theme in place.
-import { STORAGE_KEY } from './theme-storage';
+import { THEME_STORAGE_KEY } from './theme-storage';
 ---
 
-<script is:inline define:vars={{ STORAGE_KEY }}>
+<script is:inline define:vars={{ THEME_STORAGE_KEY }}>
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
     if (saved === 'light' || saved === 'dark') document.documentElement.dataset.theme = saved;
   } catch {
     // Storage unavailable: follow the system theme.

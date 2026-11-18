@@ -1,5 +1,5 @@
 ---
-import { localizePath, type Locale } from '../i18n/locales';
+import { htmlLang, localizePath, type Locale } from '../i18n/locales';
 import { t } from '../i18n/ui';
 import { profile } from '../data/profile';
 import ThemeInit from '../components/ThemeInit.astro';
@@ -26,7 +26,7 @@ const homeHref = localizePath('/', locale);
 ---
 
 <!doctype html>
-<html lang={locale === 'pt' ? 'pt-BR' : 'en'}>
+<html lang={htmlLang(locale)}>
   <head>
     <meta charset="utf-8" />
     <ThemeInit />
@@ -35,24 +35,24 @@ const homeHref = localizePath('/', locale);
     <meta name="description" content={description} />
   </head>
   <body>
-    <a class="skip visually-hidden" href="#main">{tr('nav.skip')}</a>
+    <a class="skip visually-hidden" href="#main">{tr('skipLink')}</a>
     <div class="shell">
       <header class="identity">
         <p class="name"><a href={homeHref}>{profile.name}</a></p>
         <p class="role">{tr('identity.role')}</p>
         <slot name="identity" />
-        <nav class="controls" aria-label={tr('nav.label')}>
+        <div class="controls">
           <a
             href={switchHref}
-            hreflang={other === 'pt' ? 'pt-BR' : 'en'}
-            lang={other === 'pt' ? 'pt-BR' : 'en'}
+            hreflang={htmlLang(other)}
+            lang={htmlLang(other)}
             aria-label={tr('lang.switchLabel')}
             data-lang-switch
           >
             {tr('lang.switch')}
           </a>
           <ThemeToggle label={tr('theme.dark')} />
-        </nav>
+        </div>
       </header>
       <main id="main" tabindex="-1">
         <slot />

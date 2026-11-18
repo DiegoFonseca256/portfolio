@@ -15,11 +15,11 @@ const { label } = Astro.props;
 </button>
 
 <script>
-  import { STORAGE_KEY } from './theme-storage';
+  import { THEME_STORAGE_KEY, type Theme } from './theme-storage';
 
   const root = document.documentElement;
   const systemDark = matchMedia('(prefers-color-scheme: dark)');
-  const showing = () => root.dataset.theme ?? (systemDark.matches ? 'dark' : 'light');
+  const showing = (): Theme => (root.dataset.theme as Theme | undefined) ?? (systemDark.matches ? 'dark' : 'light');
 
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]')) {
     const sync = () => button.setAttribute('aria-pressed', String(showing() === 'dark'));
@@ -27,7 +27,7 @@ const { label } = Astro.props;
       const next = showing() === 'dark' ? 'light' : 'dark';
       root.dataset.theme = next;
       try {
-        localStorage.setItem(STORAGE_KEY, next);
+        localStorage.setItem(THEME_STORAGE_KEY, next);
       } catch {
         // Storage blocked: the choice lasts for this page view only.
       }

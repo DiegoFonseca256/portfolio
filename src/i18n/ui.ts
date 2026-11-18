@@ -19,8 +19,7 @@ const en = {
   'lang.switchLabel': 'Ler em português',
   'theme.dark': 'Dark theme',
   'identity.role': 'Computer Engineering student · PUC-Rio · Rio de Janeiro',
-  'nav.skip': 'Skip to content',
-  'nav.label': 'Site',
+  'skipLink': 'Skip to content',
 } as const;
 
 type Keys = keyof typeof en;
@@ -40,8 +39,7 @@ const pt: Record<Keys, string> = {
   'lang.switchLabel': 'Read in English',
   'theme.dark': 'Tema escuro',
   'identity.role': 'Estudante de Engenharia da Computação · PUC-Rio · Rio de Janeiro',
-  'nav.skip': 'Pular para o conteúdo',
-  'nav.label': 'Site',
+  'skipLink': 'Pular para o conteúdo',
 };
 
 const dictionaries: Record<Locale, Record<Keys, string>> = { en, pt };

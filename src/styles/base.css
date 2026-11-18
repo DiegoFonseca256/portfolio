@@ -60,12 +60,6 @@ a {
   white-space: nowrap;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  html {
-    scroll-behavior: smooth;
-  }
-}
-
 /* Non-essential motion is off. Components with essential motion (the alert
    simulation) handle reduced motion themselves by starting paused. */
 @media (prefers-reduced-motion: reduce) {
