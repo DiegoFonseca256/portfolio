@@ -65,7 +65,7 @@ A static, bilingual site (English by default, Portuguese mirrored) with its own 
 ## Implementation Decisions
 
 - **Stack:** Astro with TypeScript, producing a fully static site, with no backend and no server runtime. Styling is hand-written CSS with design tokens, with no Tailwind or UI kit, to avoid the generic look.
-- **Visual direction:** editorial base (strong typography, generous whitespace, numbers from the real projects as the featured element) plus data visualizations built from the projects' real logic. The concrete typeface pairing and palette are **not decided yet**. They come out of a UI prototype with 2 or 3 structurally different home variants that Diego chooses from (see Further Notes). Avoid the generic AI tells: gradient heroes, logo grids, identical rounded cards, scroll-triggered fade-ins on every section, one accented word in the headline, all-caps eyebrows.
+- **Visual direction:** editorial base (strong typography, generous whitespace, numbers from the real projects as the featured element) plus data visualizations built from the projects' real logic. The typeface pairing, palette and layout came out of a UI prototype: the "Sidebar" direction (see Further Notes). Avoid the generic AI tells: gradient heroes, logo grids, identical rounded cards, scroll-triggered fade-ins on every section, one accented word in the headline, all-caps eyebrows.
 - **Information architecture:**
   - Home: headline → the two Estudo de caso previews → Brasileirão note → Experiência and formação timeline → skills and languages → contact and CV download.
   - One page per Estudo de caso: Hipótese Capital and StockQuoteAlert.
@@ -135,7 +135,28 @@ A static, bilingual site (English by default, Portuguese mirrored) with its own 
 
 ## Further Notes
 
-- **Open decision: visual identity.** Before building the real pages, run a UI prototype: 2 or 3 structurally different home variants on one route, switchable via `?variant=` and a floating bar hidden in production. Diego picks one, or combines parts. Record the winner and the reasons on this spec, keep the prototype on a throwaway branch, and fold only the chosen direction into main.
+- **Decided: visual identity is "Sidebar" (prototype variant C2), chosen by Diego on 2026-11-18.** It took two prototype rounds. The full prototype is on the `prototype/visual-identity` branch, with notes in `src/prototype/README.md` there.
+  - **Why:** in round 1 (Notebook, Problems, Signal), Diego kept Signal for its **palette** and for **putting the real project data first**. He rejected its layout: the hierarchy was wrong, with the subtitle much bigger than his name. Round 2 offered three new layouts in that palette, and Diego picked Sidebar.
+  - **Palette (dark, as prototyped):**
+    - Navy background `#102033`, text `#E6ECF2`, muted `#8FA3B8`.
+    - Amber accent `#F2B544`, also the price line.
+    - Sell red `#F0605D` and buy green `#3CCB8B`, used only in data.
+    - Rules are muted at about 26% opacity.
+    - The prototype only has the dark theme. Ticket 04 derives the light theme from the same hues.
+  - **Type:**
+    - Instrument Serif for the name, Estudo de caso titles, section headings and big figures (the 70.3%).
+    - Instrument Serif italic in amber for each Estudo de caso's problem line.
+    - Instrument Sans for body and UI.
+    - Fragment Mono only for chart text and data readouts.
+  - **Layout:**
+    - On wide screens, a sticky identity column (about 24rem) holds the name, role line, the headline, the internship line, section nav, the language switch, and contact links with the CV.
+    - Below about 900px, that column becomes a normal header at the top.
+    - The main column (up to about 62rem) opens on the StockQuoteAlert chart.
+    - Each Estudo de caso has its figure, then the text beside a small facts column (year, type, stack).
+    - Then the Brasileirão note with its figure set large.
+    - Then Experiência as a vertical timeline (amber dots for work, muted for education), then skills as a grid of grouped lists.
+    - The name is always the largest text on the page.
+  - **Carried over from the prototype:** phones get a narrower chart viewBox so its labels stay readable.
 - **Source assets:**
   - Diego's CV PDF in the project root.
   - Two screenshots of the Hipótese Capital Streamlit dashboard (metrics page and news-with-sentiment page), saved in Diego's Windows screenshots folder as `HipoteseCapital.png` and `HipoteseCapital2.png`. Copy them into the project.
