@@ -5,9 +5,8 @@ import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  // Provisional address: replace it with the real Vercel URL once the project exists.
-  // Canonical URLs, hreflang alternates, Open Graph tags and the sitemap all derive from it.
-  site: 'https://diego-fonseca.vercel.app',
+  // The live address. Canonical URLs, hreflang alternates, Open Graph tags and the sitemap all derive from it.
+  site: 'https://diegofonseca.vercel.app',
   output: 'static',
   trailingSlash: 'ignore',
   integrations: [

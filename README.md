@@ -83,7 +83,7 @@ npx shadcn@latest add <component>
 
 ## Deploy
 
-Vercel builds and deploys every push to `main`, detecting the Astro project on its own. There's no Vercel configuration file.
+The site is live at **https://diegofonseca.vercel.app**. Vercel builds and deploys every push to `main`, detecting the Astro project on its own. There's no Vercel configuration file.
 
 - **Site address:** `site` in `astro.config.mjs`. Canonical links, hreflang, Open Graph tags and the sitemap all derive from it, so update it if the address changes.
 - **Analytics:** Vercel Web Analytics, enabled in the project's Analytics tab on Vercel. It sets no cookies, so the site needs no consent banner.

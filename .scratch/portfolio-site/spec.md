@@ -135,6 +135,7 @@ A static, bilingual site (English by default, Portuguese mirrored) with its own 
 
 ## Further Notes
 
+- **Live URL:** https://diegofonseca.vercel.app, from the public repository github.com/DiegoFonseca256/portfolio. Recorded on 2026-11-23, in ticket 10.
 - **Decided: visual identity is "Chart paper", built on shadcn/ui, chosen by Diego on 2026-11-23.** It replaces the "Sidebar" direction (prototype C2, chosen on 2026-11-18). The Sidebar prototype is still on the `prototype/visual-identity` branch. Diego asked to rebuild the site with shadcn/ui and to start the visual direction from scratch rather than reskin Sidebar. Ticket 11 did the migration.
   - **Stack consequence:** styling is Tailwind CSS v4 with the shadcn/ui theme variables in `src/styles/global.css`. Components come from the shadcn/ui v4 registry into `src/components/ui/`. They're React, rendered to static HTML unless an island needs JavaScript.
   - **Palette (light / dark):**

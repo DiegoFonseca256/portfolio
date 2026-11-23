@@ -11,7 +11,7 @@
 - [x] The full e2e suite and the axe scans pass at desktop and phone widths, in both themes and both languages.
 - [ ] Diego reviews the tone of all copy in EN and PT, and his changes are applied. This criterion needs Diego.
 - [ ] Diego creates the public `portfolio` GitHub repository and connects it to Vercel, guided step by step; pushing to main deploys automatically. This criterion needs Diego.
-- [ ] The live URL is recorded in the spec.
+- [x] The live URL is recorded in the spec.
 
 ## Comments
 
@@ -28,3 +28,4 @@
     5. Enable Analytics on Vercel.
     6. Send the live URL, so `site` in `astro.config.mjs` and the spec can be updated.
     7. Review the copy in EN and PT.
+- 2026-11-23: Diego created the public `portfolio` repository, and `main` was pushed (`7f5999f`). Diego chose the address https://diegofonseca.vercel.app. It is now `site` in `astro.config.mjs`, in the spec and in the README.
