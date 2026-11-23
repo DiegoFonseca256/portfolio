@@ -1,0 +1,34 @@
+---
+// A small, static picture of the StockQuoteAlert rule for its home preview: the
+// same scripted series and rule module as the simulation, with the e-mails it
+// fires. Decorative: the preview text says what the project is.
+import { simulateAlerts } from '@/lib/alert-zones';
+import { alertDemo } from '@/data/alert-demo';
+
+const W = 400;
+const H = 220;
+const PAD = { x: 36, top: 34, bottom: 34 };
+const readings = simulateAlerts(alertDemo);
+const prices = readings.map((r) => r.price);
+const hi = Math.max(...prices, alertDemo.sellAbove) + 1.4;
+const lo = Math.min(...prices, alertDemo.buyBelow) - 1.8;
+const x = (i: number) => PAD.x + (i * (W - 2 * PAD.x)) / (readings.length - 1);
+const y = (p: number) => PAD.top + ((hi - p) / (hi - lo)) * (H - PAD.top - PAD.bottom);
+const line = readings.map((r, i) => `${i ? 'L' : 'M'}${x(i)} ${y(r.price)}`).join(' ');
+---
+
+<svg viewBox={`0 0 ${W} ${H}`} aria-hidden="true" class="block h-auto w-full">
+  <rect x="0" y="0" width={W} height={y(alertDemo.sellAbove)} class="fill-sell/10" />
+  <rect x="0" y={y(alertDemo.buyBelow)} width={W} height={H - y(alertDemo.buyBelow)} class="fill-buy/10" />
+  <line x1="0" x2={W} y1={y(alertDemo.sellAbove)} y2={y(alertDemo.sellAbove)} stroke-dasharray="5 4" class="stroke-sell" />
+  <line x1="0" x2={W} y1={y(alertDemo.buyBelow)} y2={y(alertDemo.buyBelow)} stroke-dasharray="5 4" class="stroke-buy" />
+  <path d={line} fill="none" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" class="stroke-link" />
+  {
+    readings.map((r, i) => (
+      <>
+        <circle cx={x(i)} cy={y(r.price)} r="4" stroke-width="2" class="fill-card stroke-link" />
+        {r.email && <circle cx={x(i)} cy={y(r.price) + (r.email === 'buy' ? 20 : -20)} r="7" class={r.email === 'sell' ? 'fill-sell' : 'fill-buy'} />}
+      </>
+    ))
+  }
+</svg>

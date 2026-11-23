@@ -1,0 +1,193 @@
+# Fontes: github.com/DiegoFonseca256/hipotese-capital (README e código), as duas capturas do
+# dashboard do Diego e o relatório da PETR4 gravado na execução de 17/11/2026. Não acrescente
+# fatos que elas não afirmam.
+title: Hipótese Capital
+order: 1
+summary: >-
+  Um pipeline em Python que coleta indicadores e notícias de ações da B3, guarda cada execução num
+  banco SQL, faz uma LLM escrever um relatório de analista e mostra tudo num dashboard Streamlit.
+year: 2025
+preview:
+  problem: >-
+    Pesquisar uma ação à mão é lento, e o trabalho não deixa histórico para comparar.
+  result: >-
+    Um pipeline que guarda cada execução no SQLite e faz uma LLM escrever um relatório estruturado por empresa.
+type: Pipeline de dados e IA
+technologies: [Python, yfinance, NewsAPI, SQLite, Groq, gpt-oss-120b, tenacity, Streamlit, Plotly, pandas]
+repository: https://github.com/DiegoFonseca256/hipotese-capital
+feature:
+  kind: pipeline
+  heading: Do dado bruto ao relatório
+  intro: >-
+    Toda execução passa pelas mesmas quatro etapas, nessa ordem. O dashboard só lê o que as etapas
+    anteriores guardaram.
+  steps:
+    - title: Coletar
+      tools: [yfinance, NewsAPI]
+      text: >-
+        Preço, indicadores (P/L, ROE, dividend yield, margens, dívida, liquidez) e dados cadastrais
+        pelo yfinance, mais até cinco manchetes recentes por empresa pela NewsAPI.
+    - title: Guardar
+      tools: [SQLite]
+      text: >-
+        Os dados cadastrais ficam uma vez por ticker. Os dados de mercado entram num snapshot novo,
+        com data e hora, a cada execução, então rodadas anteriores nunca são sobrescritas. As
+        notícias não se repetem: a URL identifica cada uma.
+    - title: Analisar
+      tools: [Groq, gpt-oss-120b]
+      text: >-
+        O modelo lê o snapshot mais recente e suas notícias e devolve um relatório em JSON: resumo
+        do negócio, leitura dos indicadores, sentimento de cada manchete e perguntas para investigar.
+    - title: Mostrar
+      tools: [Streamlit, Plotly]
+      text: >-
+        Um dashboard com os indicadores, um gráfico de preço, o relatório do modelo e os cards de
+        notícias agrupados por sentimento.
+
+problem:
+  - >-
+    Pesquisar uma ação é juntar as mesmas coisas toda vez: o preço, uma dúzia de indicadores, o que
+    a empresa faz e o que as notícias dizem. Depois alguém precisa transformar os números num
+    julgamento.
+  - >-
+    Fazer isso à mão para cada empresa é lento, e o resultado se perde na atualização seguinte,
+    então não sobra histórico para comparar.
+
+approach:
+  intro:
+    - >-
+      Construí o fluxo de ponta a ponta em Python, como um pipeline que coleta, guarda, analisa e
+      mostra. A LLM é uma etapa desse pipeline, alimentada com dados estruturados do banco, e não
+      uma janela de chat por cima dele.
+  points:
+    - title: SQL para histórico e reuso
+      text: >-
+        O SQLite separa o que quase não muda (nome, setor, descrição) do que muda a cada execução
+        (um snapshot de preço e indicadores). As execuções só acrescentam linhas, então o
+        histórico fica intacto, e a LLM e o dashboard leem do mesmo lugar sem coletar de novo.
+    - title: Um prompt que pede julgamento, não repetição
+      text: >-
+        O prompt de sistema dá ao modelo um roteiro de análise (qualidade do negócio, saúde
+        financeira, valuation, catalisadores e riscos) com limites explícitos. Ele proíbe repetir
+        os números ou escrever uma análise que serviria para qualquer empresa do setor. A resposta
+        precisa ser JSON estrito, com um conjunto fixo de campos.
+    - title: Retry com backoff exponencial
+      text: >-
+        As chamadas à Groq passam pelo tenacity: até três tentativas, esperando mais a cada vez.
+        Num limite de requisições, o código lê no erro o tempo de espera sugerido, aguarda e tenta
+        mais uma vez. Uma resposta truncada ou com JSON inválido vira um erro registrado para
+        aquele ticker, em vez de parar o lote.
+    - title: Filtrar homônimos das notícias
+      text: >-
+        As notícias são buscadas pelo ticker e pelo nome da empresa, o que traz falsos positivos
+        como "vale" verbo em vez da Vale empresa. Uma expressão regular mantém só manchetes com a
+        grafia exata, e a LLM marca como irrelevante o que sobrar que não fala da empresa, para o
+        dashboard descartar.
+    - title: Uma fila de análises
+      text: >-
+        A barra lateral do dashboard permite agendar um ticker novo. Ele entra num arquivo de fila,
+        `pendentes.txt`. A próxima execução do pipeline processa esse ticker junto com os já
+        cadastrados e depois limpa a fila.
+
+result:
+  - >-
+    Um pipeline e um dashboard funcionando. As capturas e o relatório desta página vêm de uma
+    execução real com a PETR4 (Petrobras) em 17 de novembro de 2026.
+  - >-
+    Não há números de uso para mostrar. O resultado é qualitativo: o pipeline produz um relatório
+    estruturado por empresa e guarda os dados de cada execução para comparação.
+
+learnings:
+  - title: Uma LLM fica mais confiável com estrutura dos dois lados
+    text: >-
+      Entregar ao modelo os indicadores formatados e pedir JSON estrito transformou a resposta em
+      algo que o código consegue validar, guardar e mostrar, em vez de texto livre para ler à mão.
+  - title: APIs externas falham de jeitos comuns
+    text: >-
+      Limite de requisições, resposta truncada e JSON inválido acontecem no uso normal. Tratar cada
+      um por ticker impede que uma resposta ruim pare o lote inteiro.
+  - title: Separar o que muda do que não muda
+    text: >-
+      Dividir os dados cadastrais dos snapshots com data e hora é o que torna o histórico possível
+      sem duplicar dados.
+
+media:
+  - src: ../../../assets/case-studies/hipotese-capital/dashboard-metrics.png
+    alt: >-
+      O dashboard da Hipótese Capital para a PETR4, Petrobras. Mostra o preço atual de R$ 44,33, em
+      alta de 0,70%, e depois valor de mercado, P/L de 3,91x, ROE de 30,24%, dividend yield de
+      8,32%, dívida sobre patrimônio de 0,72x e beta de −0,23. Um painel aberto lista margem EBITDA
+      e operacional, fluxo de caixa livre e volume médio diário. A barra lateral tem um seletor de
+      ticker e um formulário para agendar uma nova análise, confirmando que a VALE3 entrou na fila.
+    caption: A tela de indicadores, com a barra lateral usada para agendar uma nova análise.
+  - src: ../../../assets/case-studies/hipotese-capital/dashboard-news.png
+    alt: >-
+      A seção de notícias do dashboard para a PETR4: cinco cards de manchetes do InfoMoney e da
+      Suno, cada um com foto, fonte, data e uma etiqueta dada pela IA. Três estão marcados como
+      positivos e dois como negativos.
+    caption: A tela de notícias, em que cada manchete traz o sentimento que o modelo deu a ela.
+
+examples:
+  - kind: report
+    heading: PETR4 · Petrobras · 17/11/2026
+    caption: O relatório que o modelo escreveu para a PETR4, exatamente como o pipeline o gravou.
+    sections:
+      - title: Resumo do negócio
+        paragraphs:
+          - >-
+            Petrobras opera em toda a cadeia de energia, desde a exploração até a comercialização,
+            com forte presença internacional e um segmento crescente de gás e energias de baixo
+            carbono. Seu modelo gera caixa de forma previsível graças a contratos de longo prazo e
+            à integração vertical que reduz custos de transporte e refino.
+      - title: Análise dos indicadores
+        paragraphs:
+          - >-
+            A rentabilidade é excepcional, refletindo um retorno sobre patrimônio muito acima da
+            média do setor, o que confirma a qualidade do negócio. O endividamento está em patamares
+            confortáveis, mas a liquidez de curto prazo está ligeiramente apertada, indicando
+            pressão para honrar obrigações imediatas. O fluxo de caixa livre é robusto e em
+            expansão, sustentando tanto o investimento em novos projetos quanto o generoso
+            pagamento de dividendos. O múltiplo de preço sobre lucro está extremamente atrativo, mas
+            o preço já está próximo da metade do intervalo anual, reduzindo a margem de segurança. O
+            beta negativo sugere que a ação tem se comportado de forma inversa ao mercado, o que
+            pode oferecer proteção em cenários de alta volatilidade, porém requer cautela quanto a
+            movimentos inesperados de juros ou política fiscal.
+      - title: Notícias classificadas pela IA
+        news:
+          - headline: Petrobras (PETR4) eleva projeções de produção e Capex para 2026
+            source: Suno.com.br
+            date: '2026-11-11'
+            sentiment: positive
+            label: Positiva
+          - headline: 'PETR4: Por que ações da Petrobras caem nesta terça?'
+            source: InfoMoney
+            date: '2026-11-03'
+            sentiment: negative
+            label: Negativa
+          - headline: Produção de petróleo da Petrobras (PETR4) bate recorde novamente no 3º tri
+            source: InfoMoney
+            date: '2026-10-28'
+            sentiment: positive
+            label: Positiva
+          - headline: Após eleição de Lula, até onde podem cair as ações de PETR4, ITUB4, BBAS3 e VALE3?
+            source: InfoMoney
+            date: '2026-10-26'
+            sentiment: negative
+            label: Negativa
+          - headline: Petrobras (PETR4) avalia como positivo adiamento de audiência sobre Gas Release
+            source: InfoMoney
+            date: '2026-10-21'
+            sentiment: positive
+            label: Positiva
+      - title: Perguntas para investigar
+        items:
+          - >-
+            Qual é a estratégia da Petrobras para sustentar o alto payout enquanto aumenta o
+            investimento em Capex nos próximos anos?
+          - >-
+            De que forma a empresa pretende melhorar a liquidez de curto prazo sem comprometer a
+            geração de caixa livre?
+          - >-
+            Como a Petrobras está se preparando para possíveis mudanças regulatórias no segmento de
+            gás e energias de baixo carbono, especialmente após o adiamento da audiência sobre Gas
+            Release?

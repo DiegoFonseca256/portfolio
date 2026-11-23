@@ -18,7 +18,7 @@ A static, bilingual site (English by default, Portuguese mirrored) with its own 
 4. As a Recrutador, I want to reach the two Estudos de caso from the home page without scrolling through filler, so that I see real work quickly.
 5. As a Recrutador, I want each Estudo de caso preview on the home page to show the problem, the stack and the result in one glance, so that I can choose which one to open.
 6. As a Recrutador, I want a dedicated page for Hipótese Capital, structured as problema → abordagem → resultado → aprendizado, so that I can judge how Diego thinks.
-7. As a Recrutador, I want to see the Hipótese Capital pipeline (coleta via yfinance e NewsAPI → persistência SQL → análise por LLM Llama 3 via Groq → dashboard Streamlit/Plotly) as a diagram, so that I understand the architecture without reading code.
+7. As a Recrutador, I want to see the Hipótese Capital pipeline (coleta via yfinance e NewsAPI → persistência SQL → análise por LLM gpt-oss-120b via Groq → dashboard Streamlit/Plotly) as a diagram, so that I understand the architecture without reading code.
 8. As a Recrutador, I want to see real screenshots of the Hipótese Capital dashboard (indicadores fundamentalistas, cards de notícias com sentimento classificado pela IA), so that I trust the project actually runs.
 9. As a Recrutador, I want to see an example of the report the LLM generates (avaliação do negócio, interpretação dos indicadores, sentimento das notícias, perguntas para investigação), so that I understand what the AI part actually does.
 10. As a Recrutador, I want to understand the design choices behind Hipótese Capital (por que SQL para histórico e reuso, por que retry com backoff exponencial na chamada da LLM, a fila de análises agendadas), so that I see engineering judgment, not just tutorials.
@@ -29,7 +29,7 @@ A static, bilingual site (English by default, Portuguese mirrored) with its own 
 15. As a Recrutador, I want the simulation to show the current zone, the last alert sent and whether an e-mail fires at each reading, so that the state behind the rule is visible.
 16. As a Recrutador, I want to see that StockQuoteAlert respects B3 market hours (seg. a sex., 10h às 18h, horário de Brasília) and keeps running through API or e-mail failures, so that I see Diego thinks about real-world operation.
 17. As a Recrutador, I want to see a realistic example of the console output and the alert e-mail StockQuoteAlert produces, so that I understand the user experience of the tool.
-18. As a Recrutador, I want a short "Como usei IA" section on the StockQuoteAlert page, so that I know where AI helped and where the decisions were Diego's.
+18. ~~As a Recrutador, I want a short "Como usei IA" section on the StockQuoteAlert page.~~ Dropped by Diego on 2026-11-23: not needed.
 19. As a Recrutador, I want a link to the StockQuoteAlert repository on GitHub, so that I can read the code.
 20. As a Recrutador, I want to see the Brasileirão project as a compact note with its headline number (70,3% de acurácia prevendo a classificação final, 2014–2019) and techniques (Random Forest, Regressão Logística, SHAP), so that I see ML experience without a broken link.
 21. As a Recrutador, I want the Brasileirão note to state clearly that it's an academic project (ENG4040) with non-public code, so that I don't go looking for a repository that doesn't exist.
@@ -64,14 +64,14 @@ A static, bilingual site (English by default, Portuguese mirrored) with its own 
 
 ## Implementation Decisions
 
-- **Stack:** Astro with TypeScript, producing a fully static site, with no backend and no server runtime. Styling is hand-written CSS with design tokens, with no Tailwind or UI kit, to avoid the generic look.
-- **Visual direction:** editorial base (strong typography, generous whitespace, numbers from the real projects as the featured element) plus data visualizations built from the projects' real logic. The typeface pairing, palette and layout came out of a UI prototype: the "Sidebar" direction (see Further Notes). Avoid the generic AI tells: gradient heroes, logo grids, identical rounded cards, scroll-triggered fade-ins on every section, one accented word in the headline, all-caps eyebrows.
+- **Stack:** Astro with TypeScript, producing a fully static site, with no backend and no server runtime. Styling is Tailwind CSS v4 with shadcn/ui components (React, server-rendered to static HTML; JavaScript ships only for interactive islands). The theme is custom, so the site does not wear the default shadcn look.
+- **Visual direction:** editorial base (strong typography, generous whitespace, numbers from the real projects as the featured element) plus data visualizations built from the projects' real logic. The typeface pairing, palette and layout came out of a UI prototype: the "Chart paper" direction (see Further Notes), which replaced the earlier "Sidebar" prototype. Avoid the generic AI tells: gradient heroes, logo grids, identical rounded cards, scroll-triggered fade-ins on every section, one accented word in the headline, all-caps eyebrows.
 - **Information architecture:**
   - Home: headline → the two Estudo de caso previews → Brasileirão note → Experiência and formação timeline → skills and languages → contact and CV download.
   - One page per Estudo de caso: Hipótese Capital and StockQuoteAlert.
   - No separate About or Contact pages.
 - **Internationalization:** English at the root and Portuguese under `/pt/`, mirroring every route, using Astro's built-in i18n routing. The language switch keeps the visitor on the equivalent page. Each piece of copy exists in both languages; a missing translation is a build-time error, not a silent fallback.
-- **Content model:** Estudos de caso live as content entries (one per project per language) with a typed schema: title, summary, problem, approach, result, learnings, technologies, repository link, and optional media and an "uso de IA" section. Experiência entries and the Brasileirão note are structured data, also typed. This makes adding a third Estudo de caso a content change, not a code change.
+- **Content model:** Estudos de caso live as content entries (one per project per language) with a typed schema: title, summary, problem, approach, result, learnings, technologies, repository link, and optional media. Experiência entries and the Brasileirão note are structured data, also typed. This makes adding a third Estudo de caso a content change, not a code change.
 - **Alert-zone simulation (StockQuoteAlert):** a pure, framework-free logic module, separate from the chart rendering, that mirrors the real project's rule. Its interface takes a sell reference price, a buy reference price and a sequence of price readings, and returns, per reading, the zone (below / inside / above the band), the last alert held, and whether an e-mail fires (and which kind: compra or venda). The rule:
   - An alert fires only when the price **enters** a zone outside the band.
   - Staying in the same zone fires nothing.
@@ -90,11 +90,11 @@ A static, bilingual site (English by default, Portuguese mirrored) with its own 
 
   The chart component (a small interactive island) consumes this module, animates a scripted price series across the bands, and offers play, pause and step controls. With reduced motion, it starts paused and is driven by step only.
 - **Hipótese Capital visuals:**
-  - A static, accessible pipeline diagram: yfinance/NewsAPI → SQL → Llama 3 via Groq → Streamlit dashboard, drawn as inline SVG that adapts to both themes.
+  - A static, accessible pipeline diagram: yfinance/NewsAPI → SQL (SQLite) → gpt-oss-120b via Groq → Streamlit dashboard, drawn as inline SVG that adapts to both themes.
   - Diego's two real dashboard screenshots, optimized through Astro's image pipeline with descriptive alt text.
   - A sample LLM report rendered as text.
 - **Theming:** light and dark themes via CSS custom properties, defaulting to the system preference, with a persistent manual toggle. No flash of the wrong theme on load.
-- **Motion:** only where it explains something (the alert simulation, the pipeline diagram reveal, the theme change). No scroll-triggered section animations. Everything non-essential is disabled under `prefers-reduced-motion`.
+- **Motion:** only where it explains something (the alert simulation, the pipeline diagram reveal, the theme change). Motion that answers the cursor is also allowed (the headline and the graph-paper grid, ticket 12), only for a precise pointer that can hover. No scroll-triggered section animations. Everything non-essential is disabled under `prefers-reduced-motion`.
 - **Contact and privacy:**
   - Shown: an e-mail `mailto:` link, LinkedIn (linkedin.com/in/diegogfonseca), GitHub (github.com/DiegoFonseca256) and a CV PDF download.
   - Not shown: phone number and photo.
@@ -135,32 +135,24 @@ A static, bilingual site (English by default, Portuguese mirrored) with its own 
 
 ## Further Notes
 
-- **Decided: visual identity is "Sidebar" (prototype variant C2), chosen by Diego on 2026-11-18.** It took two prototype rounds. The full prototype is on the `prototype/visual-identity` branch, with notes in `src/prototype/README.md` there.
-  - **Why:** in round 1 (Notebook, Problems, Signal), Diego kept Signal for its **palette** and for **putting the real project data first**. He rejected its layout: the hierarchy was wrong, with the subtitle much bigger than his name. Round 2 offered three new layouts in that palette, and Diego picked Sidebar.
-  - **Palette (dark, as prototyped):**
-    - Navy background `#102033`, text `#E6ECF2`, muted `#8FA3B8`.
-    - Amber accent `#F2B544`, also the price line.
-    - Sell red `#F0605D` and buy green `#3CCB8B`, used only in data.
-    - Rules are muted at about 26% opacity.
-    - The prototype only has the dark theme. Ticket 04 derives the light theme from the same hues.
-  - **Type:**
-    - Instrument Serif for the name, Estudo de caso titles, section headings and big figures (the 70.3%).
-    - Instrument Serif italic in amber for each Estudo de caso's problem line.
-    - Instrument Sans for body and UI.
-    - Fragment Mono only for chart text and data readouts.
+- **Decided: visual identity is "Chart paper", built on shadcn/ui, chosen by Diego on 2026-11-23.** It replaces the "Sidebar" direction (prototype C2, chosen on 2026-11-18). The Sidebar prototype is still on the `prototype/visual-identity` branch. Diego asked to rebuild the site with shadcn/ui and to start the visual direction from scratch rather than reskin Sidebar. Ticket 11 did the migration.
+  - **Stack consequence:** styling is Tailwind CSS v4 with the shadcn/ui theme variables in `src/styles/global.css`. Components come from the shadcn/ui v4 registry into `src/components/ui/`. They're React, rendered to static HTML unless an island needs JavaScript.
+  - **Palette (light / dark):**
+    - Paper background `#EDF1EC` / `#0D1A17`, pine ink `#10241F` / `#E3ECE7`, muted `#4F625C` / `#93A69F`.
+    - Cobalt `#2347C6` / `#9DB2FF` for links and the focus ring.
+    - Sell red `#B42318` / `#F0716B` and buy green `#13724A` / `#4CC98E`, used only in data.
+  - **Type:** one family, Archivo, self-hosted with its width axis. The headline and the wordmark are set expanded (width 125) and heavy. Everything else is at normal width.
   - **Layout:**
-    - On wide screens, a sticky identity column (about 24rem) holds the name, role line, the headline, the internship line, section nav, the language switch, and contact links with the CV.
-    - Below about 900px, that column becomes a normal header at the top.
-    - The main column (up to about 62rem) opens on the StockQuoteAlert chart.
-    - Each Estudo de caso has its figure, then the text beside a small facts column (year, type, stack).
-    - Then the Brasileirão note with its figure set large.
-    - Then Experiência as a vertical timeline (amber dots for work, muted for education), then skills as a grid of grouped lists.
-    - The name is always the largest text on the page.
-  - **Carried over from the prototype:** phones get a narrower chart viewBox so its labels stay readable.
+    - A sticky header holds the name (as the home link), the language switch and the theme toggle. It has a `header` slot for section nav.
+    - A single left-aligned content column, up to 64rem (`max-w-5xl`).
+    - The home opens on the expanded headline. That headline is the one bold element on the page, and everything around it stays quiet.
+  - **Still applies from the prototype:** phones get a narrower chart viewBox so its labels stay readable.
 - **Source assets:**
-  - Diego's CV PDF in the project root.
+  - Diego's CV PDF, served at `/diego-fonseca-cv.pdf` from `public/`. It was moved there from the project root in ticket 08.
   - Two screenshots of the Hipótese Capital Streamlit dashboard (metrics page and news-with-sentiment page), saved in Diego's Windows screenshots folder as `HipoteseCapital.png` and `HipoteseCapital2.png`. Copy them into the project.
   - The two repositories' READMEs (github.com/DiegoFonseca256/hipotese-capital and github.com/DiegoFonseca256/StockQuoteAlert) are the factual source for the Estudos de caso.
+- **Hipótese Capital model:** the project uses gpt-oss-120b on Groq, not Llama 3. The README, the code (`LLM.py`) and a comment there say Groq discontinued Llama 3. Corrected on 2026-11-23, during ticket 07.
+- **Hipótese Capital sample report:** the report on the page is the real PETR4 report from the run of 2026-11-17, the same run as the screenshots. It was read from Diego's local `hipotese_capital.db` and is shown unedited, in Portuguese.
 - **Third-party images:** the second Hipótese Capital screenshot shows news thumbnails from third-party outlets (InfoMoney, Suno). This is acceptable as a screenshot of the tool. Don't extract or reuse those images on their own.
 - **Copy:** the agent drafts all copy in both languages from the CV and the READMEs. Diego reviews the tone before launch. Keep the vocabulary consistent with `GLOSSARY.md` (Recrutador, Estudo de caso, Experiência).
 - **Accuracy:** do not invent metrics, users or outcomes the sources don't state. Where a result is qualitative, say so plainly.

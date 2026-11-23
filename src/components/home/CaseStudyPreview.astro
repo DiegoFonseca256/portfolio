@@ -1,0 +1,60 @@
+---
+// One Estudo de caso on the home: the problem, the result and the stack at a
+// glance, a link to its page, and a small visual from the project itself.
+import { Image } from 'astro:assets';
+import MiniAlertChart from './MiniAlertChart.astro';
+import { buttonVariants } from '@/components/ui/button';
+import { caseStudyPath, type CaseStudy } from '@/lib/case-studies';
+import type { Locale } from '@/i18n/locales';
+import { t } from '@/i18n/ui';
+
+interface Props {
+  study: CaseStudy & { slug: string };
+  locale: Locale;
+}
+const { study, locale } = Astro.props;
+const tr = t(locale);
+const href = caseStudyPath(study.slug, locale);
+const shot = study.media[0];
+---
+
+<article class="grid items-center gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-12">
+  <div>
+    <h3 class="font-expanded text-[clamp(1.6rem,1.1rem+2vw,2.5rem)] leading-tight font-extrabold tracking-tight">
+      <a href={href} class="text-foreground no-underline hover:underline">{study.title}</a>
+    </h3>
+    <dl class="mt-6 space-y-4">
+      <div>
+        <dt class="text-sm text-muted-foreground">{tr('preview.problem')}</dt>
+        <dd class="mt-0.5">{study.preview.problem}</dd>
+      </div>
+      <div>
+        <dt class="text-sm text-muted-foreground">{tr('preview.result')}</dt>
+        <dd class="mt-0.5">{study.preview.result}</dd>
+      </div>
+      <div>
+        <dt class="text-sm text-muted-foreground">{tr('preview.stack')}</dt>
+        <dd class="mt-0.5 text-sm">{study.technologies.join(', ')}</dd>
+      </div>
+    </dl>
+    <a href={href} class:list={[buttonVariants({ variant: 'outline', className: 'text-foreground no-underline' }), 'mt-6']}>
+      {tr('preview.read')}<span class="sr-only">: {study.title}</span>
+    </a>
+  </div>
+
+  <div class="overflow-hidden rounded-lg border bg-card" aria-hidden="true">
+    {
+      study.feature?.kind === 'alert-rule' ? (
+        <MiniAlertChart />
+      ) : shot ? (
+        <Image
+          src={shot.src}
+          alt=""
+          widths={[480, 800]}
+          sizes="(min-width: 48rem) 30rem, 100vw"
+          class="aspect-[16/10] h-auto w-full object-cover object-left-top"
+        />
+      ) : null
+    }
+  </div>
+</article>

@@ -1,8 +1,19 @@
 ---
-import Base from '../../layouts/Base.astro';
-import { everyLocale, type Locale } from '../../i18n/locales';
-import { t } from '../../i18n/ui';
-import { profile } from '../../data/profile';
+import { Download, Mail } from 'lucide-react';
+import Base from '@/layouts/Base.astro';
+import ReactiveHeadline from '@/components/ReactiveHeadline';
+import CopyEmail from '@/components/CopyEmail';
+import CaseStudyPreview from '@/components/home/CaseStudyPreview.astro';
+import Timeline from '@/components/home/Timeline.astro';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { buttonVariants } from '@/components/ui/button';
+import { everyLocale, htmlLang, type Locale } from '@/i18n/locales';
+import { t } from '@/i18n/ui';
+import { profile } from '@/data/profile';
+import { brasileirao } from '@/data/brasileirao';
+import { skillGroups, spokenLanguages } from '@/data/skills';
+import { caseStudiesIn } from '@/lib/case-studies';
 
 export function getStaticPaths() {
   return everyLocale();
@@ -10,43 +21,116 @@ export function getStaticPaths() {
 
 const { locale } = Astro.props as { locale: Locale };
 const tr = t(locale);
-// The full home (Estudo de caso previews, Brasileirão, Experiência, skills) is ticket 08.
+const studies = await caseStudiesIn(locale);
+const accuracy = new Intl.NumberFormat(htmlLang(locale), { style: 'percent', maximumFractionDigits: 1 }).format(brasileirao.accuracy);
+
+const section = 'scroll-mt-24';
+const heading = 'text-2xl font-semibold tracking-tight';
+const outlineLink = buttonVariants({ variant: 'outline', size: 'lg', className: 'text-foreground no-underline' });
 ---
 
 <Base locale={locale} title={tr('meta.title')} description={tr('meta.description')}>
-  <h1>{tr('home.headline')}</h1>
-  <p class="context">{tr('home.context')}</p>
+  <section aria-labelledby="headline">
+    <ReactiveHeadline
+      client:load
+      id="headline"
+      text={tr('home.headline')}
+      className="font-expanded max-w-[14ch] text-[clamp(2.25rem,1.2rem+5vw,5.25rem)] leading-[0.98] font-extrabold tracking-tight text-balance"
+    />
+    <p class="mt-8 max-w-[60ch] text-xl leading-snug">{tr('home.context')}</p>
+    <p class="mt-2 text-muted-foreground">{tr('home.location')}</p>
+  </section>
 
-  <section aria-labelledby="contact-heading">
-    <h2 id="contact-heading">{tr('contact.heading')}</h2>
-    <ul>
-      <li><a href={`mailto:${profile.email}`}>{tr('contact.email')}</a></li>
-      <li><a href={profile.linkedin}>{tr('contact.linkedin')}</a></li>
-      <li><a href={profile.github}>{tr('contact.github')}</a></li>
+  <Separator className="my-16" />
+
+  <section id="work" aria-labelledby="work-heading" class={section}>
+    <h2 id="work-heading" class={heading}>{tr('nav.work')}</h2>
+    <div class="mt-10 space-y-16">
+      {studies.map((study) => <CaseStudyPreview study={study} locale={locale} />)}
+    </div>
+  </section>
+
+  <Separator className="my-16" />
+
+  <section id="brasileirao" aria-labelledby="brasileirao-heading" class:list={[section, 'grid gap-8 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:gap-12']}>
+    <div>
+      <p class="font-expanded text-[clamp(3.5rem,2.4rem+4.5vw,6.5rem)] leading-none font-extrabold tracking-tight tabular-nums">{accuracy}</p>
+      <p class="mt-3 max-w-[32ch] text-muted-foreground">{brasileirao.figureLabel[locale]}</p>
+    </div>
+    <div>
+      <h2 id="brasileirao-heading" class={heading}>{brasileirao.title[locale]}</h2>
+      <p class="mt-4 max-w-[60ch]">{brasileirao.text[locale]}</p>
+      <ul class="mt-4 flex flex-wrap gap-2">
+        {brasileirao.techniques[locale].map((tech) => <li><Badge variant="outline" className="text-sm">{tech}</Badge></li>)}
+      </ul>
+      <p class="mt-4 text-sm text-muted-foreground">{brasileirao.context[locale]}</p>
+    </div>
+  </section>
+
+  <Separator className="my-16" />
+
+  <section id="experience" aria-labelledby="experience-heading" class={section}>
+    <h2 id="experience-heading" class={heading}>{tr('experience.heading')}</h2>
+    <div class="mt-8"><Timeline locale={locale} /></div>
+  </section>
+
+  <Separator className="my-16" />
+
+  <section id="skills" aria-labelledby="skills-heading" class={section}>
+    <h2 id="skills-heading" class={heading}>{tr('skills.heading')}</h2>
+    <div class="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+      {
+        skillGroups.map((group) => (
+          <div>
+            <h3 class="font-semibold">{group.title[locale]}</h3>
+            <ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground sm:block sm:space-y-1">
+              {group.items[locale].map((item) => (
+                <li>{item}</li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+    <h3 class="mt-12 font-semibold">{tr('skills.spoken')}</h3>
+    <dl class="mt-3 flex flex-wrap gap-x-10 gap-y-3">
+      {
+        spokenLanguages.map((entry) => (
+          <div>
+            <dt>{entry.language[locale]}</dt>
+            <dd class="text-sm text-muted-foreground">{entry.level[locale]}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </section>
+
+  <Separator className="my-16" />
+
+  <section id="contact" aria-labelledby="contact-heading" class={section}>
+    <h2 id="contact-heading" class={heading}>{tr('contact.heading')}</h2>
+    <ul class="mt-6 flex flex-wrap gap-3">
+      <li class="flex gap-1">
+        <a href={`mailto:${profile.email}`} class={buttonVariants({ size: 'lg', className: 'no-underline' })}>
+          <Mail aria-hidden="true" />
+          {tr('contact.email')}
+        </a>
+        <CopyEmail
+          client:idle
+          email={profile.email}
+          copyLabel={tr('contact.copy')}
+          copiedLabel={tr('contact.copied')}
+          failedLabel={tr('contact.copyFailed')}
+        />
+      </li>
+      <li><a href={profile.linkedin} class={outlineLink}>{tr('contact.linkedin')}</a></li>
+      <li><a href={profile.github} class={outlineLink}>{tr('contact.github')}</a></li>
+      <li>
+        <a href={profile.cv} download type="application/pdf" hreflang="pt-BR" class={outlineLink}>
+          <Download aria-hidden="true" />
+          {tr('contact.cv')}
+        </a>
+      </li>
     </ul>
   </section>
 </Base>
-
-<style>
-  h1 {
-    max-width: 22ch;
-    font: 400 var(--text-3xl) / 1.05 var(--font-display);
-  }
-  .context {
-    max-width: var(--measure);
-    margin: var(--space-s) 0 var(--space-2xl);
-    color: var(--color-accent);
-    font-size: var(--text-lg);
-  }
-  h2 {
-    margin-bottom: var(--space-s);
-    font: 400 var(--text-2xl) / 1 var(--font-display);
-  }
-  ul {
-    display: grid;
-    gap: var(--space-2xs);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-</style>

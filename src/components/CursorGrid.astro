@@ -1,0 +1,68 @@
+---
+// The "chart paper" under the page: graph-paper rules (minor every 24px, major
+// every fifth line) that show only in a soft circle around the mouse. It is
+// decoration only, behind everything, and ignores the pointer. It runs only
+// when cursor effects are allowed (see src/lib/pointer.ts).
+---
+
+<div class="cursor-grid" aria-hidden="true" data-cursor-grid></div>
+
+<style>
+  .cursor-grid {
+    --minor: color-mix(in oklab, var(--link) 16%, transparent);
+    --major: color-mix(in oklab, var(--link) 30%, transparent);
+    --x: -999px;
+    --y: -999px;
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 300ms ease-out;
+    background-image:
+      linear-gradient(to right, var(--major) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--major) 1px, transparent 1px),
+      linear-gradient(to right, var(--minor) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--minor) 1px, transparent 1px);
+    background-size:
+      120px 120px,
+      120px 120px,
+      24px 24px,
+      24px 24px;
+    mask-image: radial-gradient(circle 260px at var(--x) var(--y), #000 0%, transparent 100%);
+  }
+  .cursor-grid[data-active] {
+    opacity: 1;
+  }
+</style>
+
+<script>
+  import { watchCursorEffects } from '@/lib/pointer';
+
+  for (const grid of document.querySelectorAll<HTMLElement>('[data-cursor-grid]')) {
+    let frame = 0;
+    let x = 0;
+    let y = 0;
+    const paint = () => {
+      frame = 0;
+      grid.style.setProperty('--x', `${x}px`);
+      grid.style.setProperty('--y', `${y}px`);
+      grid.dataset.active = '';
+    };
+    const onMove = (event: PointerEvent) => {
+      x = event.clientX;
+      y = event.clientY;
+      if (!frame) frame = requestAnimationFrame(paint);
+    };
+    const onLeave = () => delete grid.dataset.active;
+
+    watchCursorEffects((allowed) => {
+      document.removeEventListener('pointermove', onMove);
+      document.documentElement.removeEventListener('pointerleave', onLeave);
+      onLeave();
+      if (!allowed) return;
+      document.addEventListener('pointermove', onMove, { passive: true });
+      document.documentElement.addEventListener('pointerleave', onLeave);
+    });
+  }
+</script>

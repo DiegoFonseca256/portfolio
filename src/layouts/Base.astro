@@ -1,28 +1,45 @@
 ---
-import { htmlLang, localizePath, type Locale } from '../i18n/locales';
-import { t } from '../i18n/ui';
-import { profile } from '../data/profile';
-import ThemeInit from '../components/ThemeInit.astro';
-import ThemeToggle from '../components/ThemeToggle.astro';
-// Self-hosted fonts: no third-party request, and they ship with the build.
-import '@fontsource/instrument-serif/400.css';
-import '@fontsource/instrument-serif/400-italic.css';
-import '@fontsource-variable/instrument-sans/index.css';
-import '@fontsource/fragment-mono/400.css';
-import '../styles/tokens.css';
-import '../styles/base.css';
+import { Languages } from 'lucide-react';
+import { defaultLocale, htmlLang, locales, localizePath, type Locale } from '@/i18n/locales';
+import { t } from '@/i18n/ui';
+import { profile } from '@/data/profile';
+import { buttonVariants } from '@/components/ui/button';
+import ThemeInit from '@/components/ThemeInit.astro';
+import ThemeToggle from '@/components/ThemeToggle';
+import CursorGrid from '@/components/CursorGrid.astro';
+// Vercel Web Analytics: cookieless, so no consent banner. It only reports on Vercel deployments.
+import Analytics from '@vercel/analytics/astro';
+// Self-hosted font with its width axis: no third-party request, and it ships with the build.
+import '@fontsource-variable/archivo/wdth.css';
+import '@/styles/global.css';
 
 interface Props {
   locale: Locale;
   title: string;
   description: string;
+  /** Open Graph type: the home is a website, an Estudo de caso an article. */
+  ogType?: 'website' | 'article';
 }
 
-const { locale, title, description } = Astro.props;
+const { locale, title, description, ogType = 'website' } = Astro.props;
 const tr = t(locale);
 const other: Locale = locale === 'en' ? 'pt' : 'en';
 const switchHref = localizePath(Astro.url.pathname, other);
+
+// Absolute URLs for search engines and link previews, from `site` in astro.config.mjs.
+const absolute = (path: string) => new URL(path, Astro.site).href;
+const canonical = absolute(localizePath(Astro.url.pathname, locale));
+const alternates = locales.map((l) => ({ hreflang: htmlLang(l), href: absolute(localizePath(Astro.url.pathname, l)) }));
+const ogLocale = { en: 'en_US', pt: 'pt_BR' } as const;
+const ogImage = absolute(`/og-${locale}.png`);
 const homeHref = localizePath('/', locale);
+// The home's sections, linked from every page.
+const sections = [
+  ['work', 'nav.work'],
+  ['experience', 'nav.experience'],
+  ['skills', 'nav.skills'],
+  ['contact', 'nav.contact'],
+] as const;
 ---
 
 <!doctype html>
@@ -33,113 +50,70 @@ const homeHref = localizePath('/', locale);
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {alternates.map((alt) => <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />)}
+    <link rel="alternate" hreflang="x-default" href={alternates.find((alt) => alt.hreflang === htmlLang(defaultLocale))!.href} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={profile.name} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={ogLocale[locale]} />
+    <meta property="og:locale:alternate" content={ogLocale[other]} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${profile.name}: ${tr('home.headline')}`} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
   </head>
-  <body>
-    <a class="skip visually-hidden" href="#main">{tr('skipLink')}</a>
-    <div class="shell">
-      <header class="identity">
-        <p class="name"><a href={homeHref}>{profile.name}</a></p>
-        <p class="role">{tr('identity.role')}</p>
-        <slot name="identity" />
-        <div class="controls">
+  <body class="min-h-screen">
+    <CursorGrid />
+    <a
+      class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+      href="#main">{tr('skipLink')}</a
+    >
+    <header class="sticky top-0 z-40 border-b bg-background/90 backdrop-blur-sm">
+      <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3 sm:px-6">
+        <a href={homeHref} class="font-expanded text-lg font-bold tracking-tight text-foreground no-underline">
+          {profile.name}
+        </a>
+        <nav aria-label={tr('nav.label')} class="hidden lg:block">
+          <ul class="flex gap-1">
+            {sections.map(([id, key]) => (
+              <li>
+                <a href={`${homeHref}#${id}`} class={buttonVariants({ variant: 'ghost', size: 'sm', className: 'font-normal text-muted-foreground no-underline hover:text-foreground' })}>
+                  {tr(key)}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <slot name="header" />
+        <div class="flex flex-wrap items-center gap-2">
           <a
             href={switchHref}
             hreflang={htmlLang(other)}
             lang={htmlLang(other)}
             aria-label={tr('lang.switchLabel')}
+            class={buttonVariants({ variant: 'ghost', size: 'sm', className: 'text-foreground no-underline' })}
             data-lang-switch
           >
+            <Languages aria-hidden="true" />
             {tr('lang.switch')}
           </a>
-          <ThemeToggle label={tr('theme.dark')} />
+          <ThemeToggle client:load label={tr('theme.dark')} />
         </div>
-      </header>
-      <main id="main" tabindex="-1">
-        <slot />
-      </main>
-    </div>
+      </div>
+    </header>
+    <main id="main" tabindex="-1" class="mx-auto max-w-5xl px-4 pt-16 pb-24 outline-none sm:px-6 sm:pt-24">
+      <slot />
+    </main>
+    <Analytics />
   </body>
 </html>
-
-<style>
-  .skip {
-    position: fixed;
-    top: var(--space-xs);
-    left: var(--space-xs);
-    z-index: 10;
-    padding: var(--space-2xs) var(--space-s);
-    background: var(--color-text);
-    color: var(--color-bg);
-  }
-
-  .shell {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    min-height: 100vh;
-  }
-
-  .identity {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-s);
-    padding: var(--space-l) var(--gutter);
-    border-bottom: 1px solid var(--color-rule);
-  }
-  .name {
-    margin: 0;
-    font: 400 var(--text-name) / var(--leading-tight) var(--font-display);
-    letter-spacing: -0.01em;
-  }
-  .name a {
-    color: var(--color-text);
-    text-decoration: none;
-  }
-  .role {
-    margin: 0;
-    color: var(--color-muted);
-    font-size: var(--text-sm);
-  }
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-xs) var(--space-m);
-  }
-  .controls > a {
-    color: var(--color-text);
-  }
-
-  main {
-    min-width: 0;
-    max-width: var(--content-max);
-    padding: var(--space-l) var(--gutter) var(--space-3xl);
-  }
-  main:focus {
-    outline: none;
-  }
-
-  /* Wide screens: the identity column sticks beside the scrolling content. */
-  @media (min-width: 900px) {
-    .shell {
-      grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
-    }
-    .identity {
-      position: sticky;
-      top: 0;
-      align-self: start;
-      height: 100vh;
-      overflow-y: auto;
-      padding-block: var(--space-xl);
-      border-bottom: 0;
-      border-right: 1px solid var(--color-rule);
-    }
-    .controls {
-      margin-top: auto;
-      padding-top: var(--space-m);
-      border-top: 1px solid var(--color-rule);
-    }
-    main {
-      padding-block: var(--space-xl) var(--space-3xl);
-    }
-  }
-</style>

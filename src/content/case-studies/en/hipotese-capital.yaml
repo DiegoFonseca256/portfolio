@@ -1,0 +1,194 @@
+# Sources: github.com/DiegoFonseca256/hipotese-capital (README and code), Diego's two dashboard
+# screenshots, and the PETR4 report stored by the run of 2026-11-17. Don't add facts they don't state.
+title: Hipótese Capital
+order: 1
+summary: >-
+  A Python pipeline that collects fundamentals and news for B3 stocks, keeps every run in a SQL
+  database, has an LLM write an analyst-style report, and shows it all in a Streamlit dashboard.
+year: 2025
+preview:
+  problem: >-
+    Researching a stock by hand is slow, and the work leaves no history to compare against.
+  result: >-
+    A pipeline that keeps every run in SQLite and has an LLM write a structured report for each company.
+type: Data and AI pipeline
+technologies: [Python, yfinance, NewsAPI, SQLite, Groq, gpt-oss-120b, tenacity, Streamlit, Plotly, pandas]
+repository: https://github.com/DiegoFonseca256/hipotese-capital
+feature:
+  kind: pipeline
+  heading: From raw data to a report
+  intro: >-
+    Every run goes through the same four steps, in order. The dashboard only reads what the earlier
+    steps stored.
+  steps:
+    - title: Collect
+      tools: [yfinance, NewsAPI]
+      text: >-
+        Price, fundamentals (P/L, ROE, dividend yield, margins, debt, liquidity) and company details
+        from yfinance, plus up to five recent headlines per company from NewsAPI.
+    - title: Store
+      tools: [SQLite]
+      text: >-
+        Company details are kept once per ticker. Market data goes into a new, timestamped snapshot
+        on every run, so earlier runs are never overwritten. News is de-duplicated by URL.
+    - title: Analyse
+      tools: [Groq, gpt-oss-120b]
+      text: >-
+        The model reads the latest snapshot and its news and returns a JSON report: a business
+        summary, a reading of the indicators, a sentiment for each headline and questions to dig into.
+    - title: Show
+      tools: [Streamlit, Plotly]
+      text: >-
+        A dashboard with the indicators, a price chart, the model's report and the news cards
+        grouped by sentiment.
+
+problem:
+  - >-
+    Researching a stock means gathering the same things every time: the price, a dozen
+    fundamentals, what the business does and what the news says. Then someone has to turn the
+    numbers into a judgement.
+  - >-
+    Doing that by hand for each company is slow, and the result is gone when the next update
+    comes, so there's no history to compare against.
+
+approach:
+  intro:
+    - >-
+      I built the flow end to end in Python, as a pipeline that collects, stores, analyses and
+      shows. The LLM is one step of that pipeline, fed with structured data from the database, not
+      a chat window on top of it.
+  points:
+    - title: SQL for history and reuse
+      text: >-
+        SQLite separates what rarely changes (name, sector, description) from what changes on every
+        run (a snapshot of price and indicators). Runs only add rows, so the history stays intact,
+        and the LLM and the dashboard read from the same place without collecting again.
+    - title: A prompt that asks for judgement, not repetition
+      text: >-
+        The system prompt gives the model an analysis framework (business quality, financial
+        health, valuation, catalysts and risks) with explicit thresholds. It forbids repeating the
+        numbers or writing analysis that would fit any company in the sector. The answer must be
+        strict JSON with a fixed set of fields.
+    - title: Retry with exponential backoff
+      text: >-
+        Calls to Groq go through tenacity: up to three attempts, waiting longer each time. On a
+        rate limit, the code reads the suggested wait from the error, sleeps, and tries once more.
+        A truncated or invalid JSON answer is recorded as an error for that ticker instead of
+        stopping the batch.
+    - title: Filtering homonyms out of the news
+      text: >-
+        News is searched by ticker and company name, which catches false matches such as "vale"
+        the verb instead of Vale the company. A regular expression keeps only headlines with the
+        exact spelling, and the LLM labels anything left that isn't about the company as
+        irrelevant, so the dashboard drops it.
+    - title: A queue of analyses
+      text: >-
+        The dashboard's sidebar can schedule a new ticker. It goes into a queue file,
+        `pendentes.txt`. The next pipeline run processes it together with the tickers already
+        registered, then clears the queue.
+
+result:
+  - >-
+    A working pipeline and dashboard. The screenshots and the report on this page come from a real
+    run on PETR4 (Petrobras) on 17 November 2026.
+  - >-
+    There are no usage numbers to report. The result is qualitative: the pipeline produces a
+    structured report per company and keeps every run's data for comparison.
+
+learnings:
+  - title: An LLM is easier to trust with structure on both sides
+    text: >-
+      Feeding the model formatted indicators and asking for strict JSON made its output something
+      the code can check, store and show, instead of free text to read by hand.
+  - title: External APIs fail in ordinary ways
+    text: >-
+      Rate limits, truncated answers and invalid JSON happen in normal use. Handling each one per
+      ticker keeps one bad answer from stopping the whole batch.
+  - title: Separate what changes from what doesn't
+    text: >-
+      Splitting company details from timestamped snapshots is what makes a history possible
+      without duplicating data.
+
+media:
+  - src: ../../../assets/case-studies/hipotese-capital/dashboard-metrics.png
+    alt: >-
+      The Hipótese Capital dashboard for PETR4, Petrobras. It shows the current price of R$ 44.33,
+      up 0.70%, then market cap, P/L of 3.91x, ROE of 30.24%, dividend yield of 8.32%, debt to
+      equity of 0.72x and beta of −0.23. An expanded panel lists EBITDA and operating margins, free
+      cash flow and average daily volume. The sidebar has a ticker picker and a form to schedule a
+      new analysis, confirming that VALE3 was added to the queue.
+    caption: The indicators view, with the sidebar used to schedule a new analysis.
+  - src: ../../../assets/case-studies/hipotese-capital/dashboard-news.png
+    alt: >-
+      The news section of the dashboard for PETR4: five headline cards from InfoMoney and Suno,
+      each with its photo, source and date, and a tag set by the AI. Three are tagged positive and
+      two negative.
+    caption: The news view, where each headline carries the sentiment the model gave it.
+
+examples:
+  - kind: report
+    lang: pt
+    heading: PETR4 · Petrobras · 17/11/2026
+    caption: >-
+      The report the model wrote for PETR4, exactly as the pipeline stored it. It's in Portuguese,
+      like the prompt.
+    sections:
+      - title: Resumo do negócio
+        paragraphs:
+          - >-
+            Petrobras opera em toda a cadeia de energia, desde a exploração até a comercialização,
+            com forte presença internacional e um segmento crescente de gás e energias de baixo
+            carbono. Seu modelo gera caixa de forma previsível graças a contratos de longo prazo e
+            à integração vertical que reduz custos de transporte e refino.
+      - title: Análise dos indicadores
+        paragraphs:
+          - >-
+            A rentabilidade é excepcional, refletindo um retorno sobre patrimônio muito acima da
+            média do setor, o que confirma a qualidade do negócio. O endividamento está em patamares
+            confortáveis, mas a liquidez de curto prazo está ligeiramente apertada, indicando
+            pressão para honrar obrigações imediatas. O fluxo de caixa livre é robusto e em
+            expansão, sustentando tanto o investimento em novos projetos quanto o generoso
+            pagamento de dividendos. O múltiplo de preço sobre lucro está extremamente atrativo, mas
+            o preço já está próximo da metade do intervalo anual, reduzindo a margem de segurança. O
+            beta negativo sugere que a ação tem se comportado de forma inversa ao mercado, o que
+            pode oferecer proteção em cenários de alta volatilidade, porém requer cautela quanto a
+            movimentos inesperados de juros ou política fiscal.
+      - title: Notícias classificadas pela IA
+        news:
+          - headline: Petrobras (PETR4) eleva projeções de produção e Capex para 2026
+            source: Suno.com.br
+            date: '2026-11-11'
+            sentiment: positive
+            label: Positiva
+          - headline: 'PETR4: Por que ações da Petrobras caem nesta terça?'
+            source: InfoMoney
+            date: '2026-11-03'
+            sentiment: negative
+            label: Negativa
+          - headline: Produção de petróleo da Petrobras (PETR4) bate recorde novamente no 3º tri
+            source: InfoMoney
+            date: '2026-10-28'
+            sentiment: positive
+            label: Positiva
+          - headline: Após eleição de Lula, até onde podem cair as ações de PETR4, ITUB4, BBAS3 e VALE3?
+            source: InfoMoney
+            date: '2026-10-26'
+            sentiment: negative
+            label: Negativa
+          - headline: Petrobras (PETR4) avalia como positivo adiamento de audiência sobre Gas Release
+            source: InfoMoney
+            date: '2026-10-21'
+            sentiment: positive
+            label: Positiva
+      - title: Perguntas para investigar
+        items:
+          - >-
+            Qual é a estratégia da Petrobras para sustentar o alto payout enquanto aumenta o
+            investimento em Capex nos próximos anos?
+          - >-
+            De que forma a empresa pretende melhorar a liquidez de curto prazo sem comprometer a
+            geração de caixa livre?
+          - >-
+            Como a Petrobras está se preparando para possíveis mudanças regulatórias no segmento de
+            gás e energias de baixo carbono, especialmente após o adiamento da audiência sobre Gas
+            Release?

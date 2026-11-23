@@ -1,0 +1,104 @@
+# Fonte: github.com/DiegoFonseca256/StockQuoteAlert (README). Não acrescente fatos que ele não afirma.
+title: StockQuoteAlert
+order: 2
+summary: >-
+  Aplicação de console em C# que monitora uma ação da B3 e manda um alerta de compra ou venda por
+  e-mail quando o preço sai de uma faixa de referência, sem repetir o mesmo alerta.
+year: 2026
+preview:
+  problem: >-
+    Um alerta de preço que dispara a cada consulta manda o mesmo e-mail várias vezes e deixa de ser lido.
+  result: >-
+    Uma ferramenta de console em C# que manda um e-mail a cada entrada numa zona, só no horário do pregão da B3.
+type: Aplicação de console
+technologies: [C#, .NET 10, API da brapi, SMTP]
+repository: https://github.com/DiegoFonseca256/StockQuoteAlert
+feature:
+  kind: alert-rule
+
+problem:
+  - >-
+    Quem define um preço de venda e um de compra para uma ação quer saber quando o mercado cruza um
+    deles, sem ficar olhando cotações o dia inteiro.
+  - >-
+    Um alerta ingênuo, que consulta a cada minuto e dispara sempre que o preço passa da referência,
+    manda o mesmo e-mail várias vezes enquanto o preço continua lá. Depois de alguns, ninguém lê
+    mais os alertas.
+
+approach:
+  intro:
+    - >-
+      O programa recebe um ticker e dois preços de referência na linha de comando, como
+      `PETR4 22.67 22.59`. Ele valida os argumentos e confere se o ticker existe na B3 antes de
+      começar. Depois consulta a API da brapi num intervalo configurável e envia os e-mails por SMTP.
+  points:
+    - title: Alerta só ao entrar numa zona
+      text: >-
+        Cada leitura fica abaixo, dentro ou acima da faixa. O programa guarda o último alerta
+        enviado e só dispara quando o preço entra numa zona fora da faixa. Continuar lá não envia
+        nada. Voltar para dentro zera o alerta guardado, então a próxima saída avisa de novo. Se o
+        envio falhar, o estado não é atualizado e a próxima leitura tenta outra vez.
+    - title: Horário da B3
+      text: >-
+        Depois de uma consulta ao iniciar, o programa só consulta a API de segunda a sexta, das 10h
+        às 18h no horário de Brasília, independente do fuso do computador. Essa janela cobre o
+        pregão regular o ano todo, já que o fechamento da B3 muda com o horário de verão dos EUA.
+        Fora dela, o programa mostra a próxima abertura e espera, sem fazer requisições.
+    - title: Continua rodando apesar de falhas
+      text: >-
+        Se a API ou o servidor de e-mail falharem por um momento, o programa segue para a próxima
+        leitura em vez de encerrar. Ele para com Ctrl+C.
+    - title: Segredos fora do arquivo de configuração
+      text: >-
+        As configurações ficam no `appsettings.json` e os segredos num arquivo `.env`, e o git
+        ignora os dois. Qualquer configuração pode ser sobrescrita por uma variável de ambiente,
+        como `Smtp__Password` para `Smtp.Password`.
+
+result:
+  - >-
+    Uma ferramenta de console funcionando. Ela monitora uma ação, envia um e-mail cada vez que o preço
+    entra numa zona fora da faixa e respeita o horário do mercado. O README documenta a regra dos alertas como
+    uma tabela de decisão, que a tabela desta página reproduz com a mesma lógica.
+  - >-
+    Não há números de uso para mostrar. O resultado é qualitativo: a regra se comporta como a
+    tabela de decisão especifica.
+
+learnings:
+  - title: É o estado que torna a regra útil
+    text: >-
+      Comparar um preço com uma referência é uma linha. O que faz o alerta valer a leitura é
+      guardar o último alerta enviado e só atualizá-lo depois que o e-mail sai.
+  - title: O horário é do mercado, não da máquina
+    text: >-
+      Fixar a janela de negociação no horário de Brasília, e não no relógio do computador, faz o
+      programa se comportar igual onde quer que rode.
+  - title: Validar antes de o loop começar
+    text: >-
+      Conferir os argumentos e o ticker logo no início transforma uma entrada errada num erro claro
+      com código de saída 1, em vez de uma falha minutos depois de começar a monitorar.
+
+examples:
+  - kind: console
+    caption: >-
+      Saída do console monitorando PETR4, com venda acima de 45 e compra abaixo de 40.
+    output: |
+      Usando token da variável BRAPI_API_KEY.
+
+      Monitorando PETR4: venda acima de 45, compra abaixo de 40.
+      Pressione Ctrl+C para encerrar.
+
+      [10:00:01] PETR4: Preço 44,80 está dentro do intervalo [40, 45]
+      [10:01:01] PETR4: Preço 45,12 está acima do máximo 45
+      Enviando e-mail para destino_dos_alertas@exemplo.com com assunto '[VENDA] PETR4 a R$ 45,12'
+      [10:02:01] PETR4: Preço 45,20 está acima do máximo 45
+      ...
+      [18:00:01] Mercado fechado. Próxima abertura: 05/10 10:00
+  - kind: email
+    caption: >-
+      O e-mail enviado às 10h01, quando o preço entrou na zona de venda. Às 10h02 o preço ainda
+      estava acima de 45, então nada foi enviado.
+    subject: '[VENDA] PETR4 a R$ 45,12'
+    body:
+      - A cotação de PETR4 está em R$ 45,12, acima do preço de referência para venda (R$ 45,00).
+      - 'Recomendação: VENDER.'
+      - 'Horário: 05/10/2026 10:01:01'

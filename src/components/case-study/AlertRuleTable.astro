@@ -1,0 +1,60 @@
+---
+// The StockQuoteAlert alert rule: the scripted series run through the real rule
+// module (src/lib/alert-zones.ts), first as the interactive simulation, then as a
+// table, which is the simulation's text alternative and its no-JavaScript view.
+import { simulateAlerts } from '@/lib/alert-zones';
+import { alertDemo } from '@/data/alert-demo';
+import { htmlLang, type Locale } from '@/i18n/locales';
+import { t } from '@/i18n/ui';
+import AlertSimulation, { SIM_KEYS, type SimLabels } from './AlertSimulation';
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const tr = t(locale);
+const price = new Intl.NumberFormat(htmlLang(locale), { style: 'currency', currency: 'BRL' });
+const readings = simulateAlerts(alertDemo);
+const labels = Object.fromEntries(SIM_KEYS.map((key) => [key, tr(key)])) as SimLabels;
+const fill = (text: string) =>
+  text.replace('{sell}', price.format(alertDemo.sellAbove)).replace('{buy}', price.format(alertDemo.buyBelow));
+const emailTone = { sell: 'text-sell', buy: 'text-buy' } as const;
+---
+
+<section aria-labelledby="rule-heading" data-simulation>
+  <h2 id="rule-heading" class="text-2xl font-semibold tracking-tight">{tr('rule.heading')}</h2>
+  <p class="mt-3 max-w-[65ch] text-muted-foreground">{fill(tr('rule.intro'))}</p>
+  <AlertSimulation client:load simulation={alertDemo} labels={labels} lang={htmlLang(locale)} />
+  <div class="mt-10 rounded-lg border bg-card">
+    <Table className="tabular-nums">
+      <TableCaption className="mb-4 px-4 text-left">{tr('rule.caption')}</TableCaption>
+      <TableHeader>
+        <TableRow className="hover:bg-transparent">
+          <TableHead className="pr-2 pl-4" scope="col"><span aria-hidden="true">#</span><span class="sr-only">{tr('rule.reading')}</span></TableHead>
+          <TableHead scope="col">{tr('rule.price')}</TableHead>
+          <TableHead className="whitespace-normal" scope="col">{tr('rule.zone')}</TableHead>
+          <TableHead className="whitespace-normal" scope="col">{tr('rule.lastAlert')}</TableHead>
+          <TableHead className="pr-4 whitespace-normal" scope="col">{tr('rule.email')}</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {
+          readings.map((reading, i) => (
+            <TableRow>
+              <TableCell className="pr-2 pl-4">{i + 1}</TableCell>
+              <TableCell>{price.format(reading.price)}</TableCell>
+              <TableCell className="whitespace-normal">{tr(`zone.${reading.zone}`)}</TableCell>
+              <TableCell className="whitespace-normal text-muted-foreground">
+                {reading.lastAlert ? tr(`alert.${reading.lastAlert}`) : tr('rule.none')}
+              </TableCell>
+              <TableCell className={reading.email ? `pr-4 whitespace-normal font-semibold ${emailTone[reading.email]}` : 'pr-4 whitespace-normal text-muted-foreground'}>
+                {reading.email ? tr(`email.${reading.email}`) : tr('email.none')}
+              </TableCell>
+            </TableRow>
+          ))
+        }
+      </TableBody>
+    </Table>
+  </div>
+</section>

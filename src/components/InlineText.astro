@@ -1,0 +1,10 @@
+---
+// Renders a content string, turning `backtick` spans into <code>. Content is
+// plain text otherwise: no HTML or Markdown passes through.
+interface Props {
+  text: string;
+}
+const parts = Astro.props.text.split('`');
+---
+
+{parts.map((part, i) => (i % 2 === 1 ? <code class="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em]">{part}</code> : part))}

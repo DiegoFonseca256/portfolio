@@ -1,0 +1,162 @@
+/*
+ * Site-wide styles: Tailwind v4 plus the shadcn/ui theme variables.
+ *
+ * Direction "Chart paper": a cool, pale green-grey like plotter paper, pine ink,
+ * and cobalt for links and focus. One typeface, Archivo, whose width axis carries
+ * the personality: the headline and the wordmark are set expanded and heavy,
+ * everything else at normal width.
+ *
+ * Colours are written once with light-dark(): the first value is the light theme,
+ * the second the dark one. Which one applies follows `color-scheme`, which
+ * defaults to the system preference and is pinned by `data-theme` on <html>
+ * once the Recrutador uses the theme toggle.
+ */
+
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* shadcn components style dark mode with `dark:`. It matches the same rule as
+   light-dark(): an explicit data-theme wins, otherwise the system preference. */
+@custom-variant dark {
+  &:where([data-theme='dark'], [data-theme='dark'] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme='light']), :root:not([data-theme='light']) *) {
+      @slot;
+    }
+  }
+}
+
+:root {
+  color-scheme: light dark;
+}
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+:root {
+  --radius: 0.375rem;
+
+  --background: light-dark(#edf1ec, #0d1a17);
+  --foreground: light-dark(#10241f, #e3ece7);
+  --card: light-dark(#f5f8f4, #12231f);
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+  --primary: light-dark(#10241f, #e3ece7);
+  --primary-foreground: light-dark(#edf1ec, #0d1a17);
+  --secondary: light-dark(#dce4dc, #1b2f2a);
+  --secondary-foreground: var(--foreground);
+  --muted: light-dark(#dce4dc, #1b2f2a);
+  --muted-foreground: light-dark(#4f625c, #93a69f);
+  --accent: light-dark(#dce4dc, #1b2f2a);
+  --accent-foreground: var(--foreground);
+  --destructive: light-dark(#b42318, #f0716b);
+  --border: light-dark(#c5d0c6, #26403a);
+  --input: light-dark(#c5d0c6, #26403a);
+  --ring: light-dark(#2347c6, #9db2ff);
+
+  /* Links in running text, and the focus ring. */
+  --link: light-dark(#2347c6, #9db2ff);
+  /* Data only: the alert zones and the e-mails they fire. */
+  --sell: light-dark(#b42318, #f0716b);
+  --buy: light-dark(#13724a, #4cc98e);
+
+  --chart-1: var(--link);
+  --chart-2: var(--sell);
+  --chart-3: var(--buy);
+  --chart-4: var(--muted-foreground);
+  --chart-5: var(--border);
+}
+
+@theme inline {
+  --font-sans: 'Archivo Variable', 'Archivo', system-ui, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-link: var(--link);
+  --color-sell: var(--sell);
+  --color-buy: var(--buy);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* Archivo set wide and heavy: the headline and the wordmark. */
+@utility font-expanded {
+  font-stretch: 125%;
+  font-variation-settings: 'wdth' 125;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    overflow-wrap: break-word;
+  }
+  /* Links in text are underlined, not only coloured (Tailwind's preflight removes it).
+     Links styled as buttons opt out with `no-underline`. */
+  a {
+    color: var(--link);
+    text-decoration-line: underline;
+    text-underline-offset: 0.22em;
+  }
+  /* Keyboard focus is always visible. shadcn components draw their own ring;
+     everything else gets this outline. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  [hidden] {
+    display: none !important;
+  }
+}
+
+/* Non-essential motion is off. Components with essential motion (the alert
+   simulation) handle reduced motion themselves by starting paused. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

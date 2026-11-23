@@ -1,0 +1,201 @@
+---
+import { Image } from 'astro:assets';
+import { CodeXml } from 'lucide-react';
+import Base from '@/layouts/Base.astro';
+import InlineText from '@/components/InlineText.astro';
+import AlertRuleTable from '@/components/case-study/AlertRuleTable.astro';
+import PipelineDiagram from '@/components/case-study/PipelineDiagram.astro';
+import { Badge } from '@/components/ui/badge';
+import { buttonVariants } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { caseStudyPaths, type CaseStudy } from '@/lib/case-studies';
+import { htmlLang, type Locale } from '@/i18n/locales';
+import { t } from '@/i18n/ui';
+
+export const getStaticPaths = caseStudyPaths;
+
+interface Props {
+  locale: Locale;
+  slug: string;
+  study: CaseStudy;
+}
+
+const { locale, study } = Astro.props;
+const tr = t(locale);
+
+/** `lang` for an example written in another language than the page, else nothing. */
+const exampleLang = (lang: Locale | undefined) => (lang && lang !== locale ? htmlLang(lang) : undefined);
+const sentimentTone = { positive: 'border-buy/50 text-buy', negative: 'border-sell/50 text-sell', neutral: 'text-muted-foreground' } as const;
+
+const sectionGrid = 'grid gap-x-12 gap-y-4 md:grid-cols-[11rem_minmax(0,1fr)]';
+const sectionHeading = 'text-2xl font-semibold tracking-tight';
+const prose = 'max-w-[65ch] space-y-4';
+const repoLink = buttonVariants({ variant: 'outline', size: 'lg', className: 'text-foreground no-underline' });
+---
+
+<Base locale={locale} title={tr('case.pageTitle').replace('{title}', study.title)} description={study.summary} ogType="article">
+  <article>
+    <header>
+      <h1 class="font-expanded text-[clamp(1.6rem,0.4rem+5.5vw,4.5rem)] leading-none font-extrabold tracking-tight break-words">
+        {study.title}
+      </h1>
+      <p class="mt-6 max-w-[60ch] text-xl leading-snug">{study.summary}</p>
+
+      <dl aria-label={tr('case.facts')} class="mt-10 grid gap-6 sm:grid-cols-[auto_auto_1fr] sm:gap-12">
+        <div>
+          <dt class="text-sm text-muted-foreground">{tr('case.year')}</dt>
+          <dd class="mt-1 font-medium tabular-nums">{study.year}</dd>
+        </div>
+        <div>
+          <dt class="text-sm text-muted-foreground">{tr('case.type')}</dt>
+          <dd class="mt-1 font-medium">{study.type}</dd>
+        </div>
+        <div>
+          <dt class="text-sm text-muted-foreground">{tr('case.stack')}</dt>
+          <dd class="mt-1">
+            <ul class="flex flex-wrap gap-2">
+              {study.technologies.map((tech) => (
+                <li><Badge variant="outline" className="text-sm">{tech}</Badge></li>
+              ))}
+            </ul>
+          </dd>
+        </div>
+      </dl>
+
+      <a href={study.repository} class:list={[repoLink, 'mt-8']}>
+        <CodeXml aria-hidden="true" />
+        {tr('case.repository')}
+      </a>
+    </header>
+
+    <Separator className="my-16" />
+
+    {study.feature && (
+      <>
+        {study.feature.kind === 'alert-rule' && <AlertRuleTable locale={locale} />}
+        {study.feature.kind === 'pipeline' && (
+          <PipelineDiagram heading={study.feature.heading} intro={study.feature.intro} steps={study.feature.steps} />
+        )}
+        <Separator className="my-16" />
+      </>
+    )}
+
+    <div class="space-y-16">
+      <section aria-labelledby="problem" class={sectionGrid}>
+        <h2 id="problem" class={sectionHeading}>{tr('case.problem')}</h2>
+        <div class={prose}>{study.problem.map((p) => <p><InlineText text={p} /></p>)}</div>
+      </section>
+
+      <section aria-labelledby="approach" class={sectionGrid}>
+        <h2 id="approach" class={sectionHeading}>{tr('case.approach')}</h2>
+        <div class={prose}>
+          {study.approach.intro.map((p) => <p><InlineText text={p} /></p>)}
+          {study.approach.points.map((point) => (
+            <div class="border-l-2 border-link pl-4">
+              <h3 class="font-semibold">{point.title}</h3>
+              <p class="mt-1"><InlineText text={point.text} /></p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section aria-labelledby="result" class={sectionGrid}>
+        <h2 id="result" class={sectionHeading}>{tr('case.result')}</h2>
+        <div class={prose}>{study.result.map((p) => <p><InlineText text={p} /></p>)}</div>
+      </section>
+
+      <section aria-labelledby="learnings" class={sectionGrid}>
+        <h2 id="learnings" class={sectionHeading}>{tr('case.learnings')}</h2>
+        <ul class={prose}>
+          {study.learnings.map((point) => (
+            <li>
+              <h3 class="font-semibold">{point.title}</h3>
+              <p class="mt-1"><InlineText text={point.text} /></p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {study.media.length > 0 && (
+        <section aria-labelledby="media" class={sectionGrid}>
+          <h2 id="media" class={sectionHeading}>{tr('case.media')}</h2>
+          <div class="min-w-0 space-y-10">
+            {study.media.map((item) => (
+              <figure>
+                <Image src={item.src} alt={item.alt} class="h-auto w-full rounded-lg border" widths={[800, 1200, 1600]} sizes="(min-width: 64rem) 50rem, 100vw" />
+                <figcaption class="mt-3 text-sm text-muted-foreground">
+                  {item.caption} <a href={item.src.src}>{tr('case.fullSize')}</a>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
+      {study.examples.length > 0 && (
+        <section aria-labelledby="examples" class={sectionGrid}>
+          <h2 id="examples" class={sectionHeading}>{tr('case.examples')}</h2>
+          <div class="min-w-0 space-y-10">
+            {study.examples.map((example) => (
+              <figure lang={exampleLang(example.lang)}>
+                {example.kind === 'console' && (
+                  <pre class="rounded-lg border bg-[light-dark(#10241f,#081311)] p-4 font-mono text-sm leading-relaxed break-words whitespace-pre-wrap text-[#e3ece7]"><code>{example.output.trimEnd()}</code></pre>
+                )}
+                {example.kind === 'email' && (
+                  <Card className="max-w-[65ch] gap-4">
+                    <CardHeader className="border-b">
+                      <p class="text-sm text-muted-foreground">{tr('case.subject')}</p>
+                      <p class="font-semibold">{example.subject}</p>
+                    </CardHeader>
+                    <CardContent className="space-y-2">{example.body.map((line) => <p>{line}</p>)}</CardContent>
+                  </Card>
+                )}
+                {example.kind === 'report' && (
+                  <Card className="max-w-[65ch] gap-0 py-0">
+                    <CardHeader className="border-b py-4">
+                      <p class="font-semibold">{example.heading}</p>
+                    </CardHeader>
+                    <CardContent className="divide-y">
+                      {example.sections.map((section) => (
+                        <div class="space-y-3 py-5">
+                          <h3 class="font-semibold">{section.title}</h3>
+                          {section.paragraphs?.map((p) => <p>{p}</p>)}
+                          {section.items && (
+                            <ol class="list-decimal space-y-2 pl-5">{section.items.map((item) => <li>{item}</li>)}</ol>
+                          )}
+                          {section.news && (
+                            <ul class="space-y-3">
+                              {section.news.map((item) => (
+                                <li class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-3">
+                                  <Badge variant="outline" className={`shrink-0 ${sentimentTone[item.sentiment]}`}>{item.label}</Badge>
+                                  <span>
+                                    {item.headline}
+                                    <span class="block text-sm text-muted-foreground">
+                                      {item.source}, {new Date(item.date + 'T12:00:00').toLocaleDateString(htmlLang(example.lang ?? locale))}
+                                    </span>
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+                <figcaption lang={exampleLang(example.lang) ? htmlLang(locale) : undefined} class="mt-3 max-w-[65ch] text-sm text-muted-foreground">{example.caption}</figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
+
+    </div>
+
+    <Separator className="my-16" />
+    <a href={study.repository} class={repoLink}>
+      <CodeXml aria-hidden="true" />
+      {tr('case.repository')}
+    </a>
+  </article>
+</Base>

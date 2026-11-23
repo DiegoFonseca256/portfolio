@@ -1,0 +1,165 @@
+---
+// A pipeline drawn as inline SVG: boxes left to right on wide screens, top to
+// bottom on narrow ones (two SVGs, one shown per width, so labels keep a readable
+// size). The ordered list below explains each step and doubles as the diagram's
+// text alternative. On load the steps appear in order, once; never under
+// reduced motion.
+interface Step {
+  title: string;
+  tools: string[];
+  text: string;
+}
+interface Props {
+  heading: string;
+  intro: string;
+  steps: Step[];
+}
+const { heading, intro, steps } = Astro.props;
+const n = steps.length;
+
+const label = `${heading}: ${steps.map((s, i) => `${i + 1}. ${s.title} (${s.tools.join(', ')})`).join(', ')}.`;
+
+// Wide layout: one row.
+const W = 960;
+const GAP = 52;
+const BOX_W = (W - GAP * (n - 1)) / n;
+const BOX_H = 128;
+const wide = steps.map((_, i) => ({ x: i * (BOX_W + GAP), y: 2 }));
+
+// Narrow layout: one column.
+const NW = 320;
+const NBOX_H = 104;
+const NGAP = 40;
+const NH = n * NBOX_H + (n - 1) * NGAP + 4;
+const narrow = steps.map((_, i) => ({ x: 2, y: 2 + i * (NBOX_H + NGAP) }));
+---
+
+<section aria-labelledby="pipeline-heading" class="pipeline">
+  <h2 id="pipeline-heading" class="text-2xl font-semibold tracking-tight">{heading}</h2>
+  <p class="mt-3 max-w-[65ch] text-muted-foreground">{intro}</p>
+
+  <div class="mt-8">
+    <svg viewBox={`0 0 ${W} ${BOX_H + 4}`} role="img" aria-label={label} class="hidden h-auto w-full overflow-visible md:block">
+      <defs>
+        <marker id="pipeline-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" class="fill-muted-foreground"></path>
+        </marker>
+      </defs>
+      {
+        wide.slice(1).map((box, k) => (
+          <line
+            x1={wide[k]!.x + BOX_W + 6}
+            x2={box.x - 8}
+            y1={box.y + BOX_H / 2}
+            y2={box.y + BOX_H / 2}
+            marker-end="url(#pipeline-arrow)"
+            pathLength="1"
+            class="pipeline-arrow stroke-muted-foreground"
+            stroke-width="1.5"
+            style={`--i: ${k + 1}`}
+          />
+        ))
+      }
+      {
+        steps.map((step, i) => (
+          <g class="pipeline-step" style={`--i: ${i}`}>
+            <rect x={wide[i]!.x} y={wide[i]!.y} width={BOX_W} height={BOX_H} rx="8" class="fill-card stroke-border" stroke-width="1.5" />
+            <circle cx={wide[i]!.x + 26} cy={wide[i]!.y + 30} r="13" class="fill-primary" />
+            <text x={wide[i]!.x + 26} y={wide[i]!.y + 35} text-anchor="middle" class="fill-primary-foreground text-[14px] font-semibold">
+              {i + 1}
+            </text>
+            <text x={wide[i]!.x + 50} y={wide[i]!.y + 36} class="fill-foreground text-[19px] font-semibold">
+              {step.title}
+            </text>
+            {step.tools.map((tool, t) => (
+              <text x={wide[i]!.x + 18} y={wide[i]!.y + 76 + t * 22} class="fill-muted-foreground text-[15px]">
+                {tool}
+              </text>
+            ))}
+          </g>
+        ))
+      }
+    </svg>
+
+    <svg viewBox={`0 0 ${NW + 4} ${NH}`} role="img" aria-label={label} class="mx-auto block h-auto w-full max-w-sm overflow-visible md:hidden">
+      <defs>
+        <marker id="pipeline-arrow-narrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" class="fill-muted-foreground"></path>
+        </marker>
+      </defs>
+      {
+        narrow.slice(1).map((box, k) => (
+          <line
+            x1={NW / 2}
+            x2={NW / 2}
+            y1={narrow[k]!.y + NBOX_H + 6}
+            y2={box.y - 8}
+            marker-end="url(#pipeline-arrow-narrow)"
+            pathLength="1"
+            class="pipeline-arrow stroke-muted-foreground"
+            stroke-width="1.5"
+            style={`--i: ${k + 1}`}
+          />
+        ))
+      }
+      {
+        steps.map((step, i) => (
+          <g class="pipeline-step" style={`--i: ${i}`}>
+            <rect x={narrow[i]!.x} y={narrow[i]!.y} width={NW} height={NBOX_H} rx="8" class="fill-card stroke-border" stroke-width="1.5" />
+            <circle cx={narrow[i]!.x + 26} cy={narrow[i]!.y + 30} r="13" class="fill-primary" />
+            <text x={narrow[i]!.x + 26} y={narrow[i]!.y + 35} text-anchor="middle" class="fill-primary-foreground text-[14px] font-semibold">
+              {i + 1}
+            </text>
+            <text x={narrow[i]!.x + 50} y={narrow[i]!.y + 36} class="fill-foreground text-[19px] font-semibold">
+              {step.title}
+            </text>
+            <text x={narrow[i]!.x + 18} y={narrow[i]!.y + 76} class="fill-muted-foreground text-[15px]">
+              {step.tools.join(' · ')}
+            </text>
+          </g>
+        ))
+      }
+    </svg>
+  </div>
+
+  <ol class="mt-8 grid gap-6 md:grid-cols-[repeat(var(--steps),minmax(0,1fr))] md:gap-[3.25rem]" style={`--steps: ${n}`}>
+    {
+      steps.map((step, i) => (
+        <li>
+          <h3 class="font-semibold">
+            <span class="text-muted-foreground tabular-nums">{i + 1}.</span> {step.title}
+          </h3>
+          <p class="mt-1 text-sm leading-relaxed">{step.text}</p>
+        </li>
+      ))
+    }
+  </ol>
+</section>
+
+<style>
+  @media (prefers-reduced-motion: no-preference) {
+    .pipeline-step {
+      animation: pipeline-step-in 420ms ease-out both;
+      animation-delay: calc(var(--i) * 260ms);
+    }
+    .pipeline-arrow {
+      stroke-dasharray: 1;
+      animation: pipeline-arrow-draw 260ms ease-out both;
+      animation-delay: calc(var(--i) * 260ms - 130ms);
+    }
+  }
+  @keyframes pipeline-step-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+  @keyframes pipeline-arrow-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+</style>
